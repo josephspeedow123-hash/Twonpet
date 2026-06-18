@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
-  <title>VUVUZELA 🇭🇹 Haïti vs Brésil</title>
+  <title>TWONPET 🇭🇹 Haïti vs Brésil</title>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -98,7 +98,7 @@
     .panel { display: none; padding: 24px 16px 40px; max-width: 480px; margin: 0 auto; }
     .panel.active { display: block; }
 
-    /* ---- VUVUZELA BUTTON ---- */
+    /* ---- TWONPET BUTTON ---- */
     .vuvu-wrap {
       position: relative;
       display: flex;
@@ -423,7 +423,7 @@
 
 <header>
   <div class="flag-bar"><span></span><span></span></div>
-  <h1>VUVUZELA</h1>
+  <h1>TWONPET</h1>
   <div class="match-badge">🇭🇹 Haïti <strong>vs</strong> Brésil 🇧🇷 &nbsp;·&nbsp; <strong>19 juin 2026</strong></div>
 </header>
 
@@ -439,7 +439,7 @@
     <div class="ripple r1"></div>
     <div class="ripple r2"></div>
     <div class="ripple r3"></div>
-    <button class="vuvu-btn" id="vuvu-btn" aria-label="Jouer vuvuzela">🎺</button>
+    <button class="vuvu-btn" id="vuvu-btn" aria-label="Jouer Twonpet">🎺</button>
   </div>
 
   <p class="vuvu-hint">Appuie et maintiens</p>
@@ -448,7 +448,7 @@
 
   <div class="sound-label">Choisir un son</div>
   <div class="sound-grid">
-    <button class="sound-btn active-sound" onclick="selectSound('vuvuzela', this)">🎺 Vuvuzela</button>
+    <button class="sound-btn active-sound" onclick="selectSound('Twonpet', this)">🎺 Twonpet</button>
     <button class="sound-btn" onclick="selectSound('klaxon', this)">📯 Klaxon</button>
     <button class="sound-btn" onclick="selectSound('drums', this)">🥁 Tambou</button>
     <button class="sound-btn" onclick="selectSound('chant', this)">🇭🇹 Chant Haïti</button>
@@ -494,7 +494,7 @@
     <div class="dj-controls">
       <div class="card-title" style="margin-bottom:12px">Diffuser un son</div>
       <div class="dj-grid">
-        <button class="dj-btn" onclick="djPlay('vuvuzela', this)">🎺 Vuvuzela</button>
+        <button class="dj-btn" onclick="djPlay('Twonpet', this)">🎺 Twonpet</button>
         <button class="dj-btn" onclick="djPlay('klaxon', this)">📯 Klaxon</button>
         <button class="dj-btn" onclick="djPlay('drums', this)">🥁 Tambou</button>
         <button class="dj-btn" onclick="djPlay('chant', this)">🇭🇹 Chant Haïti</button>
@@ -534,20 +534,20 @@ let currentSource = null;
 let currentGain = null;
 
 const sounds = {
-  vuvuzela: () => generateVuvuzela(),
+  Twonpet: () => generateTwonpet(),
   klaxon:   () => generateKlaxon(),
   drums:    () => generateDrums(),
   chant:    () => generateChant(),
 };
 
-let selectedSound = 'vuvuzela';
+let selectedSound = 'Twonpet';
 
-function generateVuvuzela() {
+function generateTwonpet() {
   const osc = ctx.createOscillator();
   const gain = ctx.createGain();
   const dist = ctx.createWaveShaper();
 
-  // Vuvuzela is ~235 Hz fundamental with odd harmonics
+  // Twonpet is ~235 Hz fundamental with odd harmonics
   osc.type = 'sawtooth';
   osc.frequency.setValueAtTime(235, ctx.currentTime);
   osc.frequency.linearRampToValueAtTime(238, ctx.currentTime + 0.3);

@@ -1,7 +1,7 @@
 {
-  "name": "vuvuzela-haiti",
+  "name": "Twonpet",
   "version": "1.0.0",
-  "description": "Vuvuzela app for Haiti vs Brazil World Cup 2026",
+  "description": "Twonpet app for Haiti vs Brazil World Cup 2026",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
