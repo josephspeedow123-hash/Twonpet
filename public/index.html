@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>VUVUZELA 🇭🇹 Haïti vs Brésil</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --red: #D21034;
+      --blue: #00209F;
+      --bg: #08080F;
+      --surface: #12121E;
+      --surface2: #1C1C2E;
+      --text: #F0F0FF;
+      --muted: #6B6B8A;
+      --gold: #FFD700;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* ---- HEADER ---- */
+    header {
+      text-align: center;
+      padding: 28px 16px 12px;
+      position: relative;
+    }
+
+    .flag-bar {
+      display: flex;
+      height: 4px;
+      border-radius: 2px;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+    .flag-bar span:first-child { flex: 1; background: var(--blue); }
+    .flag-bar span:last-child  { flex: 1; background: var(--red); }
+
+    header h1 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(2.4rem, 9vw, 4rem);
+      letter-spacing: 3px;
+      line-height: 1;
+      background: linear-gradient(135deg, var(--red), var(--blue));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .match-badge {
+      display: inline-block;
+      margin-top: 8px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .match-badge strong { color: var(--gold); }
+
+    /* ---- TABS ---- */
+    .tabs {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      padding: 20px 16px 0;
+    }
+
+    .tab {
+      padding: 8px 22px;
+      border-radius: 999px;
+      border: 1.5px solid var(--surface2);
+      background: transparent;
+      color: var(--muted);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .tab.active {
+      background: var(--red);
+      border-color: var(--red);
+      color: #fff;
+    }
+
+    /* ---- PANELS ---- */
+    .panel { display: none; padding: 24px 16px 40px; max-width: 480px; margin: 0 auto; }
+    .panel.active { display: block; }
+
+    /* ---- VUVUZELA BUTTON ---- */
+    .vuvu-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 32px 0 24px;
+      height: 220px;
+    }
+
+    .ripple {
+      position: absolute;
+      border-radius: 50%;
+      border: 2px solid var(--red);
+      opacity: 0;
+      animation: none;
+      pointer-events: none;
+    }
+
+    .ripple.r1 { width: 120px; height: 120px; }
+    .ripple.r2 { width: 180px; height: 180px; }
+    .ripple.r3 { width: 240px; height: 240px; }
+
+    @keyframes ripple-out {
+      0%   { transform: scale(0.6); opacity: 0.7; }
+      100% { transform: scale(1.4); opacity: 0; }
+    }
+
+    .playing .ripple.r1 { animation: ripple-out 1.2s ease-out infinite; }
+    .playing .ripple.r2 { animation: ripple-out 1.2s ease-out 0.3s infinite; }
+    .playing .ripple.r3 { animation: ripple-out 1.2s ease-out 0.6s infinite; }
+
+    .vuvu-btn {
+      position: relative;
+      z-index: 2;
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      border: none;
+      background: radial-gradient(circle at 35% 35%, #ff2a50, var(--red));
+      color: #fff;
+      font-size: 3rem;
+      cursor: pointer;
+      box-shadow: 0 0 0 0 rgba(210, 16, 52, 0.5);
+      transition: transform 0.1s, box-shadow 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    .vuvu-btn:active { transform: scale(0.93); }
+    .vuvu-btn.pressing {
+      box-shadow: 0 0 40px 10px rgba(210, 16, 52, 0.4);
+    }
+
+    .vuvu-hint {
+      text-align: center;
+      font-size: 0.8rem;
+      color: var(--muted);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    /* ---- SOUND GRID ---- */
+    .sound-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+
+    .sound-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+
+    .sound-btn {
+      padding: 14px 10px;
+      border-radius: 12px;
+      border: 1.5px solid var(--surface2);
+      background: var(--surface);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      text-align: center;
+    }
+
+    .sound-btn:active, .sound-btn.active-sound {
+      border-color: var(--red);
+      background: rgba(210,16,52,0.15);
+      color: #fff;
+    }
+
+    /* ---- ROOM SECTION ---- */
+    .section-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.6rem;
+      letter-spacing: 2px;
+      margin-bottom: 6px;
+    }
+
+    .section-sub {
+      font-size: 0.82rem;
+      color: var(--muted);
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1.5px solid var(--surface2);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+
+    .card-title {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 14px;
+      border-radius: 12px;
+      border: none;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+      letter-spacing: 0.5px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--red), #a80028);
+      color: #fff;
+    }
+
+    .btn-primary:active { transform: scale(0.97); }
+
+    .btn-secondary {
+      background: var(--surface2);
+      color: var(--text);
+      border: 1.5px solid var(--surface2);
+    }
+
+    .input-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 0;
+    }
+
+    input[type="text"] {
+      flex: 1;
+      padding: 13px 14px;
+      border-radius: 12px;
+      border: 1.5px solid var(--surface2);
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input[type="text"]:focus { border-color: var(--blue); }
+    input[type="text"]::placeholder { letter-spacing: 1px; font-weight: 400; text-transform: none; color: var(--muted); }
+
+    .input-row .btn {
+      width: auto;
+      padding: 13px 18px;
+      flex-shrink: 0;
+    }
+
+    /* ---- ROOM ACTIVE STATE ---- */
+    .room-active { display: none; }
+    .room-active.show { display: block; }
+    .room-setup { }
+    .room-setup.hide { display: none; }
+
+    .room-code-display {
+      text-align: center;
+      padding: 20px 0;
+    }
+
+    .room-code-display .code {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 3.5rem;
+      letter-spacing: 10px;
+      color: var(--gold);
+      line-height: 1;
+    }
+
+    .room-code-display .label {
+      font-size: 0.72rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-top: 6px;
+    }
+
+    .member-count {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 0 4px;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    .member-count strong { color: var(--text); font-size: 1.1rem; }
+
+    .dj-controls {
+      margin-top: 16px;
+    }
+
+    .dj-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .dj-btn {
+      padding: 16px 8px;
+      border-radius: 12px;
+      border: 1.5px solid var(--surface2);
+      background: var(--surface2);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+      text-align: center;
+    }
+
+    .dj-btn:active { transform: scale(0.96); border-color: var(--blue); }
+    .dj-btn.broadcasting { border-color: var(--red); background: rgba(210,16,52,0.2); }
+
+    .stop-btn {
+      width: 100%;
+      padding: 13px;
+      border-radius: 12px;
+      border: 1.5px solid var(--surface2);
+      background: transparent;
+      color: var(--muted);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .listener-msg {
+      text-align: center;
+      padding: 24px 0;
+    }
+
+    .listener-msg .icon { font-size: 2.5rem; margin-bottom: 10px; }
+    .listener-msg p { font-size: 0.88rem; color: var(--muted); line-height: 1.6; }
+
+    /* ---- STATUS TOAST ---- */
+    #toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--surface2);
+      color: var(--text);
+      padding: 12px 24px;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      border: 1px solid var(--surface2);
+      transition: transform 0.3s ease;
+      z-index: 100;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    #toast.show { transform: translateX(-50%) translateY(0); }
+
+    /* ---- LIVE DOT ---- */
+    .live-dot {
+      display: inline-block;
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: #22c55e;
+      animation: pulse-dot 1.4s ease-in-out infinite;
+      margin-right: 6px;
+      vertical-align: middle;
+    }
+
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.7); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .ripple, .live-dot { animation: none !important; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="flag-bar"><span></span><span></span></div>
+  <h1>VUVUZELA</h1>
+  <div class="match-badge">🇭🇹 Haïti <strong>vs</strong> Brésil 🇧🇷 &nbsp;·&nbsp; <strong>19 juin 2026</strong></div>
+</header>
+
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('solo')">Solo</button>
+  <button class="tab" onclick="switchTab('room')">Room DJ 🎙️</button>
+</div>
+
+<!-- SOLO PANEL -->
+<div class="panel active" id="panel-solo">
+
+  <div class="vuvu-wrap" id="vuvu-wrap">
+    <div class="ripple r1"></div>
+    <div class="ripple r2"></div>
+    <div class="ripple r3"></div>
+    <button class="vuvu-btn" id="vuvu-btn" aria-label="Jouer vuvuzela">🎺</button>
+  </div>
+
+  <p class="vuvu-hint">Appuie et maintiens</p>
+
+  <br/>
+
+  <div class="sound-label">Choisir un son</div>
+  <div class="sound-grid">
+    <button class="sound-btn active-sound" onclick="selectSound('vuvuzela', this)">🎺 Vuvuzela</button>
+    <button class="sound-btn" onclick="selectSound('klaxon', this)">📯 Klaxon</button>
+    <button class="sound-btn" onclick="selectSound('drums', this)">🥁 Tambou</button>
+    <button class="sound-btn" onclick="selectSound('chant', this)">🇭🇹 Chant Haïti</button>
+  </div>
+
+</div>
+
+<!-- ROOM PANEL -->
+<div class="panel" id="panel-room">
+
+  <div class="room-setup" id="room-setup">
+    <div class="section-title">Room DJ</div>
+    <p class="section-sub">Crée une room et diffuse un son vers tous les téléphones connectés. Parfait pour galvaniser une salle entière.</p>
+
+    <div class="card">
+      <div class="card-title">🎙️ Je suis le DJ</div>
+      <button class="btn btn-primary" onclick="createRoom()">Créer une room</button>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🎧 Rejoindre une room</div>
+      <div class="input-row">
+        <input type="text" id="join-code" maxlength="5" placeholder="Code de la room" />
+        <button class="btn btn-primary input-row" onclick="joinRoom()">Go</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ACTIVE ROOM - DJ VIEW -->
+  <div class="room-active" id="room-dj">
+    <div class="card">
+      <div class="room-code-display">
+        <div class="label">Code de ta room</div>
+        <div class="code" id="display-code">-----</div>
+        <div class="label" style="margin-top:4px">Partage ce code avec tes amis</div>
+      </div>
+      <div class="member-count">
+        <span class="live-dot"></span>
+        <strong id="dj-member-count">1</strong>&nbsp;téléphone connecté
+      </div>
+    </div>
+
+    <div class="dj-controls">
+      <div class="card-title" style="margin-bottom:12px">Diffuser un son</div>
+      <div class="dj-grid">
+        <button class="dj-btn" onclick="djPlay('vuvuzela', this)">🎺 Vuvuzela</button>
+        <button class="dj-btn" onclick="djPlay('klaxon', this)">📯 Klaxon</button>
+        <button class="dj-btn" onclick="djPlay('drums', this)">🥁 Tambou</button>
+        <button class="dj-btn" onclick="djPlay('chant', this)">🇭🇹 Chant Haïti</button>
+      </div>
+      <button class="stop-btn" onclick="djStop()">⏹ Arrêter le son</button>
+    </div>
+  </div>
+
+  <!-- ACTIVE ROOM - LISTENER VIEW -->
+  <div class="room-active" id="room-listener">
+    <div class="card">
+      <div class="room-code-display">
+        <div class="label">Room rejointe</div>
+        <div class="code" id="listener-code">-----</div>
+      </div>
+      <div class="member-count">
+        <span class="live-dot"></span>
+        <strong id="listener-member-count">—</strong>&nbsp;téléphones connectés
+      </div>
+    </div>
+    <div class="listener-msg">
+      <div class="icon">🎧</div>
+      <p>Ton téléphone va jouer le son dès que le DJ appuie.<br/>Garde le volume à fond! 🔊</p>
+    </div>
+  </div>
+
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+// ─── AUDIO ENGINE ───────────────────────────────────────────
+const ctx = new (window.AudioContext || window.webkitAudioContext)();
+let currentSource = null;
+let currentGain = null;
+
+const sounds = {
+  vuvuzela: () => generateVuvuzela(),
+  klaxon:   () => generateKlaxon(),
+  drums:    () => generateDrums(),
+  chant:    () => generateChant(),
+};
+
+let selectedSound = 'vuvuzela';
+
+function generateVuvuzela() {
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  const dist = ctx.createWaveShaper();
+
+  // Vuvuzela is ~235 Hz fundamental with odd harmonics
+  osc.type = 'sawtooth';
+  osc.frequency.setValueAtTime(235, ctx.currentTime);
+  osc.frequency.linearRampToValueAtTime(238, ctx.currentTime + 0.3);
+
+  // Mild distortion for brassy character
+  const curve = new Float32Array(256);
+  for (let i = 0; i < 256; i++) {
+    const x = (i * 2) / 256 - 1;
+    curve[i] = (Math.PI + 200) * x / (Math.PI + 200 * Math.abs(x));
+  }
+  dist.curve = curve;
+
+  gain.gain.setValueAtTime(0, ctx.currentTime);
+  gain.gain.linearRampToValueAtTime(0.5, ctx.currentTime + 0.08);
+
+  osc.connect(dist);
+  dist.connect(gain);
+  gain.connect(ctx.destination);
+  osc.start();
+  return { source: osc, gain };
+}
+
+function generateKlaxon() {
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = 'square';
+  osc.frequency.setValueAtTime(440, ctx.currentTime);
+  osc.frequency.setValueAtTime(350, ctx.currentTime + 0.15);
+  osc.frequency.setValueAtTime(440, ctx.currentTime + 0.3);
+  gain.gain.setValueAtTime(0.4, ctx.currentTime);
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  osc.start();
+  return { source: osc, gain };
+}
+
+function generateDrums() {
+  // Bass drum hit
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(150, ctx.currentTime);
+  osc.frequency.exponentialRampToValueAtTime(40, ctx.currentTime + 0.3);
+  gain.gain.setValueAtTime(1, ctx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4);
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  osc.start();
+  setTimeout(() => {
+    if (selectedSound === 'drums') playSound('drums');
+  }, 500);
+  return { source: osc, gain };
+}
+
+function generateChant() {
+  // Simple looping chant: rising tone pattern
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = 'triangle';
+  const now = ctx.currentTime;
+  osc.frequency.setValueAtTime(220, now);
+  osc.frequency.setValueAtTime(277, now + 0.25);
+  osc.frequency.setValueAtTime(330, now + 0.5);
+  osc.frequency.setValueAtTime(220, now + 0.75);
+  gain.gain.setValueAtTime(0.4, now);
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  osc.start();
+  return { source: osc, gain };
+}
+
+function playSound(soundId) {
+  if (ctx.state === 'suspended') ctx.resume();
+  stopSound();
+  const result = sounds[soundId]?.();
+  if (result) {
+    currentSource = result.source;
+    currentGain = result.gain;
+  }
+}
+
+function stopSound() {
+  if (currentSource) {
+    try {
+      if (currentGain) {
+        currentGain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.05);
+      }
+      setTimeout(() => { try { currentSource.stop(); } catch(e){} }, 60);
+    } catch(e) {}
+    currentSource = null;
+    currentGain = null;
+  }
+}
+
+function selectSound(id, btn) {
+  selectedSound = id;
+  document.querySelectorAll('.sound-btn').forEach(b => b.classList.remove('active-sound'));
+  btn.classList.add('active-sound');
+}
+
+// ─── SOLO BUTTON ───────────────────────────────────────────
+const vuvuBtn = document.getElementById('vuvu-btn');
+const vuvuWrap = document.getElementById('vuvu-wrap');
+
+function startPress() {
+  ctx.resume();
+  playSound(selectedSound);
+  vuvuWrap.classList.add('playing');
+  vuvuBtn.classList.add('pressing');
+}
+
+function endPress() {
+  stopSound();
+  vuvuWrap.classList.remove('playing');
+  vuvuBtn.classList.remove('pressing');
+}
+
+vuvuBtn.addEventListener('mousedown', startPress);
+vuvuBtn.addEventListener('touchstart', (e) => { e.preventDefault(); startPress(); }, { passive: false });
+vuvuBtn.addEventListener('mouseup', endPress);
+vuvuBtn.addEventListener('mouseleave', endPress);
+vuvuBtn.addEventListener('touchend', endPress);
+vuvuBtn.addEventListener('touchcancel', endPress);
+
+// ─── TABS ───────────────────────────────────────────────────
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach((t, i) => {
+    t.classList.toggle('active', (i === 0 && tab === 'solo') || (i === 1 && tab === 'room'));
+  });
+  document.getElementById('panel-solo').classList.toggle('active', tab === 'solo');
+  document.getElementById('panel-room').classList.toggle('active', tab === 'room');
+}
+
+// ─── SOCKET.IO ROOMS ────────────────────────────────────────
+const socket = io();
+
+function createRoom() {
+  socket.emit('create-room');
+}
+
+function joinRoom() {
+  const code = document.getElementById('join-code').value.trim().toUpperCase();
+  if (code.length < 3) { showToast('Entre un code valide'); return; }
+  socket.emit('join-room', code);
+}
+
+// DJ plays a sound to all members
+let activeDjBtn = null;
+function djPlay(soundId, btn) {
+  socket.emit('play-sound', soundId);
+  document.querySelectorAll('.dj-btn').forEach(b => b.classList.remove('broadcasting'));
+  btn.classList.add('broadcasting');
+  activeDjBtn = btn;
+}
+
+function djStop() {
+  socket.emit('stop-sound');
+  if (activeDjBtn) activeDjBtn.classList.remove('broadcasting');
+  activeDjBtn = null;
+}
+
+// ─── SOCKET EVENTS ──────────────────────────────────────────
+socket.on('room-created', ({ code, memberCount }) => {
+  document.getElementById('display-code').textContent = code;
+  document.getElementById('dj-member-count').textContent = memberCount;
+  document.getElementById('room-setup').classList.add('hide');
+  document.getElementById('room-dj').classList.add('show');
+  showToast('Room créée! Partage le code 🎉');
+});
+
+socket.on('room-joined', ({ code, memberCount }) => {
+  document.getElementById('listener-code').textContent = code;
+  document.getElementById('listener-member-count').textContent = memberCount;
+  document.getElementById('room-setup').classList.add('hide');
+  document.getElementById('room-listener').classList.add('show');
+  showToast('Room rejointe! En attente du DJ 🎧');
+});
+
+socket.on('member-count', (count) => {
+  document.getElementById('dj-member-count').textContent = count;
+  document.getElementById('listener-member-count').textContent = count;
+});
+
+socket.on('play-sound', (soundId) => {
+  playSound(soundId);
+  vuvuWrap.classList.add('playing');
+  setTimeout(() => vuvuWrap.classList.remove('playing'), 2000);
+});
+
+socket.on('stop-sound', () => {
+  stopSound();
+  vuvuWrap.classList.remove('playing');
+});
+
+socket.on('dj-left', () => {
+  showToast('Le DJ a quitté la room');
+  stopSound();
+  setTimeout(() => location.reload(), 2000);
+});
+
+socket.on('error', (msg) => showToast('❌ ' + msg));
+
+// ─── TOAST ──────────────────────────────────────────────────
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+}
+</script>
+</body>
+</html>
