@@ -208,54 +208,6 @@
       transform: scale(0.95);
     }
 
-    /* ---- PITCH SLIDER ---- */
-    .pitch-control {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 0 8px;
-      margin-bottom: 16px;
-    }
-
-    .pitch-label {
-      font-size: 0.65rem;
-      font-weight: 700;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      color: var(--muted);
-      white-space: nowrap;
-    }
-
-    .pitch-slider {
-      -webkit-appearance: none;
-      appearance: none;
-      flex: 1;
-      height: 4px;
-      border-radius: 2px;
-      background: var(--surface2);
-      outline: none;
-    }
-
-    .pitch-slider::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      width: 20px;
-      height: 20px;
-      border-radius: 50%;
-      background: radial-gradient(circle at 35% 35%, var(--red), #a80028);
-      border: 2px solid var(--surface);
-      cursor: pointer;
-      box-shadow: 0 0 10px rgba(210,16,52,0.3);
-    }
-
-    .pitch-slider::-moz-range-thumb {
-      width: 20px;
-      height: 20px;
-      border-radius: 50%;
-      background: radial-gradient(circle at 35% 35%, var(--red), #a80028);
-      border: 2px solid var(--surface);
-      cursor: pointer;
-    }
-
     /* ---- SOUND GRID ---- */
     .sound-label {
       font-size: 0.7rem;
@@ -539,12 +491,6 @@
     <button class="stop-fader-btn" id="stop-fader-btn">⏹</button>
   </div>
 
-  <div class="pitch-control">
-    <span class="pitch-label">Grave</span>
-    <input type="range" class="pitch-slider" id="pitch-slider" min="0.3" max="3.0" step="0.01" value="1.0" />
-    <span class="pitch-label">Aigu</span>
-  </div>
-
   <div class="sound-label">Choisir un son</div>
   <div class="sound-grid">
     <button class="sound-btn active-sound" onclick="selectSound('Twonpet', this)">🎺 Twonpet</button>
@@ -633,7 +579,6 @@
 const ctx = new (window.AudioContext || window.webkitAudioContext)();
 let currentNodes = [];
 let currentOutput = null;
-let currentOscParams = [];
 let faderGain = null;
 let isSoundActive = false;
 
@@ -657,9 +602,7 @@ function generateTwonpet() {
   const output = ctx.createGain();
   output.gain.setValueAtTime(1, now);
 
-  const pitchMultiplier = parseFloat(document.getElementById('pitch-slider').value);
-  const baseFreq = 235 * pitchMultiplier;
-  const oscParams = [];
+  const baseFreq = 235;
 
   const waves = [
     { type: 'sawtooth', freq: 1, gain: 0.35 },
@@ -692,7 +635,6 @@ function generateTwonpet() {
     osc.start();
 
     nodes.push(osc, vibrato, vibratoGain, oscGain);
-    oscParams.push({ freq: osc.frequency, base: baseFreq * w.freq });
   }
 
   // Breath noise
@@ -715,7 +657,7 @@ function generateTwonpet() {
   noise.start();
   nodes.push(noise, noiseGain, noiseFilter);
 
-  return { nodes, output, oscParams };
+  return { nodes, output };
 }
 
 function generateKlaxon() {
@@ -868,7 +810,6 @@ function playSound(soundId, volume) {
   if (result) {
     currentNodes = result.nodes || [];
     currentOutput = result.output || null;
-    currentOscParams = result.oscParams || [];
 
     if (currentOutput) {
       faderGain = ctx.createGain();
@@ -879,7 +820,6 @@ function playSound(soundId, volume) {
     }
 
     isSoundActive = true;
-    if (soundId === 'Twonpet') updatePitch();
   }
 }
 
@@ -899,20 +839,9 @@ function stopSound() {
     if (faderGain) { try { faderGain.disconnect(); } catch(e) {} }
     currentNodes = [];
     currentOutput = null;
-    currentOscParams = [];
     faderGain = null;
     isSoundActive = false;
   }, 60);
-}
-
-function updatePitch() {
-  const mult = parseFloat(document.getElementById('pitch-slider').value);
-  const baseFreq = 235 * mult;
-  const ratios = [1, 3, 5, 7, 9];
-  for (let i = 0; i < currentOscParams.length; i++) {
-    const p = currentOscParams[i];
-    p.freq.setValueAtTime(baseFreq * ratios[i], ctx.currentTime);
-  }
 }
 
 function setFaderVolume(val) {
@@ -933,7 +862,6 @@ function selectSound(id, btn) {
 // ─── FADER CONTROLS ────────────────────────────────────────
 const faderSlider = document.getElementById('fader-slider');
 const stopFaderBtn = document.getElementById('stop-fader-btn');
-const pitchSlider = document.getElementById('pitch-slider');
 
 faderSlider.addEventListener('input', () => {
   const val = parseFloat(faderSlider.value);
@@ -949,10 +877,6 @@ faderSlider.addEventListener('input', () => {
 stopFaderBtn.addEventListener('click', () => {
   faderSlider.value = '0';
   stopSound();
-});
-
-pitchSlider.addEventListener('input', () => {
-  if (selectedSound === 'Twonpet') updatePitch();
 });
 
 // ─── TABS ───────────────────────────────────────────────────
