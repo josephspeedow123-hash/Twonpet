@@ -98,69 +98,114 @@
     .panel { display: none; padding: 24px 16px 40px; max-width: 480px; margin: 0 auto; }
     .panel.active { display: block; }
 
-    /* ---- TWONPET BUTTON ---- */
-    .vuvu-wrap {
+    /* ---- DJ FADER ---- */
+    .fader-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 24px 0 16px;
+    }
+
+    .fader-track-container {
       position: relative;
+      width: 48px;
+      height: 240px;
+      background: var(--surface);
+      border: 1.5px solid var(--surface2);
+      border-radius: 24px;
       display: flex;
       align-items: center;
       justify-content: center;
-      margin: 32px 0 24px;
-      height: 220px;
+      box-shadow: inset 0 2px 8px rgba(0,0,0,0.4);
     }
 
-    .ripple {
-      position: absolute;
-      border-radius: 50%;
-      border: 2px solid var(--red);
-      opacity: 0;
-      animation: none;
-      pointer-events: none;
-    }
-
-    .ripple.r1 { width: 120px; height: 120px; }
-    .ripple.r2 { width: 180px; height: 180px; }
-    .ripple.r3 { width: 240px; height: 240px; }
-
-    @keyframes ripple-out {
-      0%   { transform: scale(0.6); opacity: 0.7; }
-      100% { transform: scale(1.4); opacity: 0; }
-    }
-
-    .playing .ripple.r1 { animation: ripple-out 1.2s ease-out infinite; }
-    .playing .ripple.r2 { animation: ripple-out 1.2s ease-out 0.3s infinite; }
-    .playing .ripple.r3 { animation: ripple-out 1.2s ease-out 0.6s infinite; }
-
-    .vuvu-btn {
-      position: relative;
-      z-index: 2;
-      width: 120px;
-      height: 120px;
-      border-radius: 50%;
-      border: none;
-      background: radial-gradient(circle at 35% 35%, #ff2a50, var(--red));
-      color: #fff;
-      font-size: 3rem;
+    .fader-track {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 4px;
+      height: 206px;
+      border-radius: 2px;
+      background: linear-gradient(to top, var(--blue), var(--muted) 40%, var(--surface2) 60%, var(--surface2));
+      outline: none;
+      writing-mode: vertical-lr;
+      direction: rtl;
       cursor: pointer;
-      box-shadow: 0 0 0 0 rgba(210, 16, 52, 0.5);
-      transition: transform 0.1s, box-shadow 0.2s;
+    }
+
+    .fader-track::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #e8e8e8, #a0a0a0);
+      border: 2px solid #ccc;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.5), inset 0 1px 2px rgba(255,255,255,0.6);
+      cursor: grab;
+      transition: transform 0.08s;
+    }
+
+    .fader-track::-webkit-slider-thumb:active {
+      cursor: grabbing;
+      transform: scale(1.08);
+    }
+
+    .fader-track::-moz-range-thumb {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #e8e8e8, #a0a0a0);
+      border: 2px solid #ccc;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.5), inset 0 1px 2px rgba(255,255,255,0.6);
+      cursor: grab;
+    }
+
+    .fader-grad {
+      position: absolute;
+      left: 50%;
+      top: 16px;
+      bottom: 16px;
+      width: 4px;
+      transform: translateX(-50%);
+      border-radius: 2px;
+      background: linear-gradient(to top, var(--blue), var(--red));
+      pointer-events: none;
+      opacity: 0.5;
+    }
+
+    .fader-label {
       display: flex;
-      align-items: center;
-      justify-content: center;
-      -webkit-tap-highlight-color: transparent;
-      user-select: none;
-    }
-
-    .vuvu-btn:active { transform: scale(0.93); }
-    .vuvu-btn.pressing {
-      box-shadow: 0 0 40px 10px rgba(210, 16, 52, 0.4);
-    }
-
-    .vuvu-hint {
-      text-align: center;
-      font-size: 0.8rem;
+      justify-content: space-between;
+      width: 48px;
+      font-size: 0.55rem;
+      font-weight: 700;
       color: var(--muted);
       letter-spacing: 1px;
       text-transform: uppercase;
+      margin-top: 6px;
+    }
+
+    .fader-label span:first-child { text-align: left; }
+    .fader-label span:last-child  { text-align: right; }
+
+    /* ---- STOP BUTTON ---- */
+    .stop-fader-btn {
+      width: 48px;
+      padding: 10px 0;
+      border-radius: 12px;
+      border: 1.5px solid var(--red);
+      background: rgba(210,16,52,0.12);
+      color: var(--red);
+      font-size: 1.1rem;
+      cursor: pointer;
+      transition: all 0.15s;
+      text-align: center;
+      margin-top: 8px;
+    }
+
+    .stop-fader-btn:active {
+      background: var(--red);
+      color: #fff;
+      transform: scale(0.95);
     }
 
     /* ---- PITCH SLIDER ---- */
@@ -169,7 +214,7 @@
       align-items: center;
       gap: 12px;
       padding: 0 8px;
-      margin: 0 0 16px;
+      margin-bottom: 16px;
     }
 
     .pitch-label {
@@ -181,7 +226,7 @@
       white-space: nowrap;
     }
 
-    input[type="range"] {
+    .pitch-slider {
       -webkit-appearance: none;
       appearance: none;
       flex: 1;
@@ -191,47 +236,24 @@
       outline: none;
     }
 
-    input[type="range"]::-webkit-slider-thumb {
+    .pitch-slider::-webkit-slider-thumb {
       -webkit-appearance: none;
-      width: 22px;
-      height: 22px;
+      width: 20px;
+      height: 20px;
       border-radius: 50%;
       background: radial-gradient(circle at 35% 35%, var(--red), #a80028);
       border: 2px solid var(--surface);
       cursor: pointer;
-      box-shadow: 0 0 12px rgba(210,16,52,0.3);
+      box-shadow: 0 0 10px rgba(210,16,52,0.3);
     }
 
-    input[type="range"]::-moz-range-thumb {
-      width: 22px;
-      height: 22px;
+    .pitch-slider::-moz-range-thumb {
+      width: 20px;
+      height: 20px;
       border-radius: 50%;
       background: radial-gradient(circle at 35% 35%, var(--red), #a80028);
       border: 2px solid var(--surface);
       cursor: pointer;
-    }
-
-    /* ---- HOLD TOGGLE ---- */
-    .hold-btn {
-      width: 100%;
-      padding: 12px;
-      border-radius: 12px;
-      border: 1.5px solid var(--surface2);
-      background: var(--surface);
-      color: var(--text);
-      font-family: 'Inter', sans-serif;
-      font-size: 0.85rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.15s;
-      text-align: center;
-      margin-bottom: 16px;
-    }
-
-    .hold-btn.active {
-      border-color: var(--gold);
-      background: rgba(255,215,0,0.1);
-      color: var(--gold);
     }
 
     /* ---- SOUND GRID ---- */
@@ -486,7 +508,7 @@
     }
 
     @media (prefers-reduced-motion: reduce) {
-      .ripple, .live-dot { animation: none !important; }
+      .live-dot { animation: none !important; }
     }
   </style>
 </head>
@@ -506,22 +528,22 @@
 <!-- SOLO PANEL -->
 <div class="panel active" id="panel-solo">
 
-  <div class="vuvu-wrap" id="vuvu-wrap">
-    <div class="ripple r1"></div>
-    <div class="ripple r2"></div>
-    <div class="ripple r3"></div>
-    <button class="vuvu-btn" id="vuvu-btn" aria-label="Jouer Twonpet">🎺</button>
+  <div class="fader-section">
+    <div class="fader-track-container">
+      <input type="range" class="fader-track" id="fader-slider" min="0" max="1" step="0.01" value="0" />
+    </div>
+    <div class="fader-label">
+      <span>0</span>
+      <span>MAX</span>
+    </div>
+    <button class="stop-fader-btn" id="stop-fader-btn">⏹</button>
   </div>
-
-  <p class="vuvu-hint">Appuie et maintiens</p>
 
   <div class="pitch-control">
     <span class="pitch-label">Grave</span>
-    <input type="range" id="pitch-slider" min="0.3" max="3.0" step="0.01" value="1.0" />
+    <input type="range" class="pitch-slider" id="pitch-slider" min="0.3" max="3.0" step="0.01" value="1.0" />
     <span class="pitch-label">Aigu</span>
   </div>
-
-  <button class="hold-btn" id="hold-btn">🔒 Maintien OFF</button>
 
   <div class="sound-label">Choisir un son</div>
   <div class="sound-grid">
@@ -608,9 +630,10 @@
 // ─── AUDIO ENGINE ───────────────────────────────────────────
 const ctx = new (window.AudioContext || window.webkitAudioContext)();
 let currentNodes = [];
-let currentMasterGain = null;
-let currentOscParams = []; // [{ freq, gain }] for real-time pitch control
-let isHolding = false;
+let currentOutput = null;
+let currentOscParams = [];
+let faderGain = null;
+let isSoundActive = false;
 
 const sounds = {
   Twonpet: () => generateTwonpet(),
@@ -621,12 +644,12 @@ const sounds = {
 
 let selectedSound = 'Twonpet';
 
+// ─── GENERATORS (continuous, no destination connect) ───────
+
 function generateTwonpet() {
   const now = ctx.currentTime;
-  const masterGain = ctx.createGain();
-  masterGain.gain.setValueAtTime(0, now);
-  masterGain.gain.linearRampToValueAtTime(0.6, now + 0.08);
-  masterGain.connect(ctx.destination);
+  const output = ctx.createGain();
+  output.gain.setValueAtTime(1, now);
 
   const pitchMultiplier = parseFloat(document.getElementById('pitch-slider').value);
   const baseFreq = 235 * pitchMultiplier;
@@ -647,7 +670,6 @@ function generateTwonpet() {
     osc.type = w.type;
     osc.frequency.setValueAtTime(baseFreq * w.freq, now);
 
-    // Slight vibrato on each oscillator
     const vibrato = ctx.createOscillator();
     vibrato.type = 'sine';
     vibrato.frequency.setValueAtTime(5 + Math.random() * 2, now);
@@ -659,24 +681,21 @@ function generateTwonpet() {
 
     const oscGain = ctx.createGain();
     oscGain.gain.setValueAtTime(w.gain, now);
-
     osc.connect(oscGain);
-    oscGain.connect(masterGain);
+    oscGain.connect(output);
     osc.start();
 
     nodes.push(osc, vibrato, vibratoGain, oscGain);
     oscParams.push({ freq: osc.frequency, base: baseFreq * w.freq });
   }
 
-  // Breath noise layer
-  const bufferSize = ctx.sampleRate * 0.1;
-  const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-  const data = noiseBuffer.getChannelData(0);
-  for (let i = 0; i < bufferSize; i++) {
-    data[i] = Math.random() * 2 - 1;
-  }
+  // Breath noise
+  const bufSize = ctx.sampleRate * 0.1;
+  const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < bufSize; i++) d[i] = Math.random() * 2 - 1;
   const noise = ctx.createBufferSource();
-  noise.buffer = noiseBuffer;
+  noise.buffer = buf;
   noise.loop = true;
   const noiseGain = ctx.createGain();
   noiseGain.gain.setValueAtTime(0.03, now);
@@ -686,97 +705,125 @@ function generateTwonpet() {
   noiseFilter.Q.setValueAtTime(0.5, now);
   noise.connect(noiseGain);
   noiseGain.connect(noiseFilter);
-  noiseFilter.connect(masterGain);
+  noiseFilter.connect(output);
   noise.start();
-
   nodes.push(noise, noiseGain, noiseFilter);
 
-  return { nodes, masterGain, oscParams };
+  return { nodes, output, oscParams };
 }
 
 function generateKlaxon() {
   const now = ctx.currentTime;
-  const masterGain = ctx.createGain();
-  masterGain.gain.setValueAtTime(0.4, now);
-  masterGain.connect(ctx.destination);
+  const output = ctx.createGain();
+  output.gain.setValueAtTime(1, now);
 
   const osc = ctx.createOscillator();
   osc.type = 'square';
-  osc.frequency.setValueAtTime(440, now);
-  osc.frequency.setValueAtTime(350, now + 0.15);
-  osc.frequency.setValueAtTime(440, now + 0.3);
-  osc.connect(masterGain);
-  osc.start();
+  osc.frequency.setValueAtTime(400, now);
 
-  return { nodes: [osc], masterGain };
+  const lfo = ctx.createOscillator();
+  lfo.type = 'sine';
+  lfo.frequency.setValueAtTime(3, now);
+  const lfoGain = ctx.createGain();
+  lfoGain.gain.setValueAtTime(80, now);
+  lfo.connect(lfoGain);
+  lfoGain.connect(osc.frequency);
+
+  osc.connect(output);
+  osc.start();
+  lfo.start();
+
+  return { nodes: [osc, lfo, lfoGain], output };
 }
 
 function generateDrums() {
   const now = ctx.currentTime;
-  const masterGain = ctx.createGain();
-  masterGain.gain.setValueAtTime(1, now);
-  masterGain.connect(ctx.destination);
+  const output = ctx.createGain();
+  output.gain.setValueAtTime(1, now);
 
   const osc = ctx.createOscillator();
   osc.type = 'sine';
-  osc.frequency.setValueAtTime(150, now);
-  osc.frequency.exponentialRampToValueAtTime(40, now + 0.3);
-  osc.connect(masterGain);
+  osc.frequency.setValueAtTime(90, now);
+
+  const lfo = ctx.createOscillator();
+  lfo.type = 'square';
+  lfo.frequency.setValueAtTime(4, now);
+  const lfoGain = ctx.createGain();
+  lfoGain.gain.setValueAtTime(60, now);
+  lfo.connect(lfoGain);
+  lfoGain.connect(osc.frequency);
+
+  osc.connect(output);
   osc.start();
+  lfo.start();
 
-  setTimeout(() => {
-    if (selectedSound === 'drums' && !isHolding) playSound('drums');
-  }, 500);
-
-  return { nodes: [osc], masterGain };
+  return { nodes: [osc, lfo, lfoGain], output };
 }
 
 function generateChant() {
   const now = ctx.currentTime;
-  const masterGain = ctx.createGain();
-  masterGain.gain.setValueAtTime(0.4, now);
-  masterGain.connect(ctx.destination);
+  const output = ctx.createGain();
+  output.gain.setValueAtTime(1, now);
 
   const osc = ctx.createOscillator();
   osc.type = 'triangle';
-  osc.frequency.setValueAtTime(220, now);
-  osc.frequency.setValueAtTime(277, now + 0.25);
-  osc.frequency.setValueAtTime(330, now + 0.5);
-  osc.frequency.setValueAtTime(220, now + 0.75);
-  osc.connect(masterGain);
-  osc.start();
+  osc.frequency.setValueAtTime(240, now);
 
-  return { nodes: [osc], masterGain };
+  const lfo = ctx.createOscillator();
+  lfo.type = 'triangle';
+  lfo.frequency.setValueAtTime(1.5, now);
+  const lfoGain = ctx.createGain();
+  lfoGain.gain.setValueAtTime(50, now);
+  lfo.connect(lfoGain);
+  lfoGain.connect(osc.frequency);
+
+  osc.connect(output);
+  osc.start();
+  lfo.start();
+
+  return { nodes: [osc, lfo, lfoGain], output };
 }
 
-function playSound(soundId) {
+// ─── PLAY / STOP / PITCH ───────────────────────────────────
+
+function playSound(soundId, volume) {
   if (ctx.state === 'suspended') ctx.resume();
   stopSound();
   const result = sounds[soundId]?.();
   if (result) {
     currentNodes = result.nodes || [];
-    currentMasterGain = result.masterGain || null;
+    currentOutput = result.output || null;
     currentOscParams = result.oscParams || [];
-    // If Twonpet, update pitch from slider
+
+    if (currentOutput) {
+      faderGain = ctx.createGain();
+      const vol = volume !== undefined ? volume : parseFloat(document.getElementById('fader-slider').value);
+      faderGain.gain.setValueAtTime(vol, ctx.currentTime);
+      currentOutput.connect(faderGain);
+      faderGain.connect(ctx.destination);
+    }
+
+    isSoundActive = true;
     if (soundId === 'Twonpet') updatePitch();
   }
 }
 
 function stopSound() {
-  if (currentMasterGain) {
-    try {
-      currentMasterGain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.05);
-    } catch(e) {}
+  if (faderGain) {
+    try { faderGain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.04); } catch(e) {}
   }
   setTimeout(() => {
     for (const n of currentNodes) {
       try { n.stop(); } catch(e) {}
       try { n.disconnect(); } catch(e) {}
     }
+    if (faderGain) { try { faderGain.disconnect(); } catch(e) {} }
     currentNodes = [];
-    currentMasterGain = null;
+    currentOutput = null;
     currentOscParams = [];
-  }, 70);
+    faderGain = null;
+    isSoundActive = false;
+  }, 60);
 }
 
 function updatePitch() {
@@ -789,66 +836,45 @@ function updatePitch() {
   }
 }
 
+function setFaderVolume(val) {
+  if (faderGain) {
+    faderGain.gain.setValueAtTime(val, ctx.currentTime);
+  }
+}
+
 function selectSound(id, btn) {
   selectedSound = id;
   document.querySelectorAll('.sound-btn').forEach(b => b.classList.remove('active-sound'));
   btn.classList.add('active-sound');
-  // If holding with Twonpet selected, restart with new sound
-  if (isHolding) {
-    playSound(id);
+  if (isSoundActive) {
+    playSound(id, parseFloat(document.getElementById('fader-slider').value));
   }
 }
 
-// ─── SOLO BUTTON ───────────────────────────────────────────
-const vuvuBtn = document.getElementById('vuvu-btn');
-const vuvuWrap = document.getElementById('vuvu-wrap');
+// ─── FADER CONTROLS ────────────────────────────────────────
+const faderSlider = document.getElementById('fader-slider');
+const stopFaderBtn = document.getElementById('stop-fader-btn');
 const pitchSlider = document.getElementById('pitch-slider');
-const holdBtn = document.getElementById('hold-btn');
 
-function startPress() {
-  ctx.resume();
-  if (isHolding) {
-    // If holding and already playing, stop
-    endPress();
-    return;
-  }
-  playSound(selectedSound);
-  vuvuWrap.classList.add('playing');
-  vuvuBtn.classList.add('pressing');
-}
-
-function endPress() {
-  if (isHolding) return; // Don't stop if hold mode is on
-  stopSound();
-  vuvuWrap.classList.remove('playing');
-  vuvuBtn.classList.remove('pressing');
-}
-
-function toggleHold() {
-  isHolding = !isHolding;
-  holdBtn.textContent = isHolding ? '🔒 Maintien ON' : '🔒 Maintien OFF';
-  holdBtn.classList.toggle('active', isHolding);
-  if (!isHolding) {
+faderSlider.addEventListener('input', () => {
+  const val = parseFloat(faderSlider.value);
+  if (val > 0 && !isSoundActive) {
+    playSound(selectedSound);
+  } else if (val > 0 && isSoundActive) {
+    setFaderVolume(val);
+  } else { // val === 0
     stopSound();
-    vuvuWrap.classList.remove('playing');
-    vuvuBtn.classList.remove('pressing');
-  }
-}
-
-pitchSlider.addEventListener('input', () => {
-  if (selectedSound === 'Twonpet') {
-    updatePitch();
   }
 });
 
-holdBtn.addEventListener('click', toggleHold);
+stopFaderBtn.addEventListener('click', () => {
+  faderSlider.value = '0';
+  stopSound();
+});
 
-vuvuBtn.addEventListener('mousedown', startPress);
-vuvuBtn.addEventListener('touchstart', (e) => { e.preventDefault(); startPress(); }, { passive: false });
-document.addEventListener('mouseup', endPress);
-vuvuBtn.addEventListener('mouseleave', endPress);
-document.addEventListener('touchend', endPress);
-document.addEventListener('touchcancel', endPress);
+pitchSlider.addEventListener('input', () => {
+  if (selectedSound === 'Twonpet') updatePitch();
+});
 
 // ─── TABS ───────────────────────────────────────────────────
 function switchTab(tab) {
@@ -910,14 +936,11 @@ socket.on('member-count', (count) => {
 });
 
 socket.on('play-sound', (soundId) => {
-  playSound(soundId);
-  vuvuWrap.classList.add('playing');
-  setTimeout(() => vuvuWrap.classList.remove('playing'), 2000);
+  playSound(soundId, 1);
 });
 
 socket.on('stop-sound', () => {
   stopSound();
-  vuvuWrap.classList.remove('playing');
 });
 
 socket.on('dj-left', () => {
