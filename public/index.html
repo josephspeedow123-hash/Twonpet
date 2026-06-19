@@ -163,6 +163,77 @@
       text-transform: uppercase;
     }
 
+    /* ---- PITCH SLIDER ---- */
+    .pitch-control {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 0 8px;
+      margin: 0 0 16px;
+    }
+
+    .pitch-label {
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      flex: 1;
+      height: 4px;
+      border-radius: 2px;
+      background: var(--surface2);
+      outline: none;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, var(--red), #a80028);
+      border: 2px solid var(--surface);
+      cursor: pointer;
+      box-shadow: 0 0 12px rgba(210,16,52,0.3);
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, var(--red), #a80028);
+      border: 2px solid var(--surface);
+      cursor: pointer;
+    }
+
+    /* ---- HOLD TOGGLE ---- */
+    .hold-btn {
+      width: 100%;
+      padding: 12px;
+      border-radius: 12px;
+      border: 1.5px solid var(--surface2);
+      background: var(--surface);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      text-align: center;
+      margin-bottom: 16px;
+    }
+
+    .hold-btn.active {
+      border-color: var(--gold);
+      background: rgba(255,215,0,0.1);
+      color: var(--gold);
+    }
+
     /* ---- SOUND GRID ---- */
     .sound-label {
       font-size: 0.7rem;
@@ -444,7 +515,13 @@
 
   <p class="vuvu-hint">Appuie et maintiens</p>
 
-  <br/>
+  <div class="pitch-control">
+    <span class="pitch-label">Grave</span>
+    <input type="range" id="pitch-slider" min="0.3" max="3.0" step="0.01" value="1.0" />
+    <span class="pitch-label">Aigu</span>
+  </div>
+
+  <button class="hold-btn" id="hold-btn">🔒 Maintien OFF</button>
 
   <div class="sound-label">Choisir un son</div>
   <div class="sound-grid">
@@ -530,8 +607,10 @@
 <script>
 // ─── AUDIO ENGINE ───────────────────────────────────────────
 const ctx = new (window.AudioContext || window.webkitAudioContext)();
-let currentSource = null;
-let currentGain = null;
+let currentNodes = [];
+let currentMasterGain = null;
+let currentOscParams = []; // [{ freq, gain }] for real-time pitch control
+let isHolding = false;
 
 const sounds = {
   Twonpet: () => generateTwonpet(),
@@ -543,80 +622,131 @@ const sounds = {
 let selectedSound = 'Twonpet';
 
 function generateTwonpet() {
-  const osc = ctx.createOscillator();
-  const gain = ctx.createGain();
-  const dist = ctx.createWaveShaper();
+  const now = ctx.currentTime;
+  const masterGain = ctx.createGain();
+  masterGain.gain.setValueAtTime(0, now);
+  masterGain.gain.linearRampToValueAtTime(0.6, now + 0.08);
+  masterGain.connect(ctx.destination);
 
-  // Twonpet is ~235 Hz fundamental with odd harmonics
-  osc.type = 'sawtooth';
-  osc.frequency.setValueAtTime(235, ctx.currentTime);
-  osc.frequency.linearRampToValueAtTime(238, ctx.currentTime + 0.3);
+  const pitchMultiplier = parseFloat(document.getElementById('pitch-slider').value);
+  const baseFreq = 235 * pitchMultiplier;
+  const oscParams = [];
 
-  // Mild distortion for brassy character
-  const curve = new Float32Array(256);
-  for (let i = 0; i < 256; i++) {
-    const x = (i * 2) / 256 - 1;
-    curve[i] = (Math.PI + 200) * x / (Math.PI + 200 * Math.abs(x));
+  const waves = [
+    { type: 'sawtooth', freq: 1, gain: 0.35 },
+    { type: 'square',   freq: 3, gain: 0.18 },
+    { type: 'sawtooth', freq: 5, gain: 0.10 },
+    { type: 'sawtooth', freq: 7, gain: 0.06 },
+    { type: 'sine',     freq: 9, gain: 0.04 },
+  ];
+
+  const nodes = [];
+
+  for (const w of waves) {
+    const osc = ctx.createOscillator();
+    osc.type = w.type;
+    osc.frequency.setValueAtTime(baseFreq * w.freq, now);
+
+    // Slight vibrato on each oscillator
+    const vibrato = ctx.createOscillator();
+    vibrato.type = 'sine';
+    vibrato.frequency.setValueAtTime(5 + Math.random() * 2, now);
+    const vibratoGain = ctx.createGain();
+    vibratoGain.gain.setValueAtTime(baseFreq * w.freq * 0.003, now);
+    vibrato.connect(vibratoGain);
+    vibratoGain.connect(osc.frequency);
+    vibrato.start();
+
+    const oscGain = ctx.createGain();
+    oscGain.gain.setValueAtTime(w.gain, now);
+
+    osc.connect(oscGain);
+    oscGain.connect(masterGain);
+    osc.start();
+
+    nodes.push(osc, vibrato, vibratoGain, oscGain);
+    oscParams.push({ freq: osc.frequency, base: baseFreq * w.freq });
   }
-  dist.curve = curve;
 
-  gain.gain.setValueAtTime(0, ctx.currentTime);
-  gain.gain.linearRampToValueAtTime(0.5, ctx.currentTime + 0.08);
+  // Breath noise layer
+  const bufferSize = ctx.sampleRate * 0.1;
+  const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+  const data = noiseBuffer.getChannelData(0);
+  for (let i = 0; i < bufferSize; i++) {
+    data[i] = Math.random() * 2 - 1;
+  }
+  const noise = ctx.createBufferSource();
+  noise.buffer = noiseBuffer;
+  noise.loop = true;
+  const noiseGain = ctx.createGain();
+  noiseGain.gain.setValueAtTime(0.03, now);
+  const noiseFilter = ctx.createBiquadFilter();
+  noiseFilter.type = 'bandpass';
+  noiseFilter.frequency.setValueAtTime(baseFreq * 3, now);
+  noiseFilter.Q.setValueAtTime(0.5, now);
+  noise.connect(noiseGain);
+  noiseGain.connect(noiseFilter);
+  noiseFilter.connect(masterGain);
+  noise.start();
 
-  osc.connect(dist);
-  dist.connect(gain);
-  gain.connect(ctx.destination);
-  osc.start();
-  return { source: osc, gain };
+  nodes.push(noise, noiseGain, noiseFilter);
+
+  return { nodes, masterGain, oscParams };
 }
 
 function generateKlaxon() {
+  const now = ctx.currentTime;
+  const masterGain = ctx.createGain();
+  masterGain.gain.setValueAtTime(0.4, now);
+  masterGain.connect(ctx.destination);
+
   const osc = ctx.createOscillator();
-  const gain = ctx.createGain();
   osc.type = 'square';
-  osc.frequency.setValueAtTime(440, ctx.currentTime);
-  osc.frequency.setValueAtTime(350, ctx.currentTime + 0.15);
-  osc.frequency.setValueAtTime(440, ctx.currentTime + 0.3);
-  gain.gain.setValueAtTime(0.4, ctx.currentTime);
-  osc.connect(gain);
-  gain.connect(ctx.destination);
+  osc.frequency.setValueAtTime(440, now);
+  osc.frequency.setValueAtTime(350, now + 0.15);
+  osc.frequency.setValueAtTime(440, now + 0.3);
+  osc.connect(masterGain);
   osc.start();
-  return { source: osc, gain };
+
+  return { nodes: [osc], masterGain };
 }
 
 function generateDrums() {
-  // Bass drum hit
+  const now = ctx.currentTime;
+  const masterGain = ctx.createGain();
+  masterGain.gain.setValueAtTime(1, now);
+  masterGain.connect(ctx.destination);
+
   const osc = ctx.createOscillator();
-  const gain = ctx.createGain();
   osc.type = 'sine';
-  osc.frequency.setValueAtTime(150, ctx.currentTime);
-  osc.frequency.exponentialRampToValueAtTime(40, ctx.currentTime + 0.3);
-  gain.gain.setValueAtTime(1, ctx.currentTime);
-  gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4);
-  osc.connect(gain);
-  gain.connect(ctx.destination);
+  osc.frequency.setValueAtTime(150, now);
+  osc.frequency.exponentialRampToValueAtTime(40, now + 0.3);
+  osc.connect(masterGain);
   osc.start();
+
   setTimeout(() => {
-    if (selectedSound === 'drums') playSound('drums');
+    if (selectedSound === 'drums' && !isHolding) playSound('drums');
   }, 500);
-  return { source: osc, gain };
+
+  return { nodes: [osc], masterGain };
 }
 
 function generateChant() {
-  // Simple looping chant: rising tone pattern
-  const osc = ctx.createOscillator();
-  const gain = ctx.createGain();
-  osc.type = 'triangle';
   const now = ctx.currentTime;
+  const masterGain = ctx.createGain();
+  masterGain.gain.setValueAtTime(0.4, now);
+  masterGain.connect(ctx.destination);
+
+  const osc = ctx.createOscillator();
+  osc.type = 'triangle';
   osc.frequency.setValueAtTime(220, now);
   osc.frequency.setValueAtTime(277, now + 0.25);
   osc.frequency.setValueAtTime(330, now + 0.5);
   osc.frequency.setValueAtTime(220, now + 0.75);
-  gain.gain.setValueAtTime(0.4, now);
-  osc.connect(gain);
-  gain.connect(ctx.destination);
+  osc.connect(masterGain);
   osc.start();
-  return { source: osc, gain };
+
+  return { nodes: [osc], masterGain };
 }
 
 function playSound(soundId) {
@@ -624,21 +754,38 @@ function playSound(soundId) {
   stopSound();
   const result = sounds[soundId]?.();
   if (result) {
-    currentSource = result.source;
-    currentGain = result.gain;
+    currentNodes = result.nodes || [];
+    currentMasterGain = result.masterGain || null;
+    currentOscParams = result.oscParams || [];
+    // If Twonpet, update pitch from slider
+    if (soundId === 'Twonpet') updatePitch();
   }
 }
 
 function stopSound() {
-  if (currentSource) {
+  if (currentMasterGain) {
     try {
-      if (currentGain) {
-        currentGain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.05);
-      }
-      setTimeout(() => { try { currentSource.stop(); } catch(e){} }, 60);
+      currentMasterGain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.05);
     } catch(e) {}
-    currentSource = null;
-    currentGain = null;
+  }
+  setTimeout(() => {
+    for (const n of currentNodes) {
+      try { n.stop(); } catch(e) {}
+      try { n.disconnect(); } catch(e) {}
+    }
+    currentNodes = [];
+    currentMasterGain = null;
+    currentOscParams = [];
+  }, 70);
+}
+
+function updatePitch() {
+  const mult = parseFloat(document.getElementById('pitch-slider').value);
+  const baseFreq = 235 * mult;
+  const ratios = [1, 3, 5, 7, 9];
+  for (let i = 0; i < currentOscParams.length; i++) {
+    const p = currentOscParams[i];
+    p.freq.setValueAtTime(baseFreq * ratios[i], ctx.currentTime);
   }
 }
 
@@ -646,31 +793,62 @@ function selectSound(id, btn) {
   selectedSound = id;
   document.querySelectorAll('.sound-btn').forEach(b => b.classList.remove('active-sound'));
   btn.classList.add('active-sound');
+  // If holding with Twonpet selected, restart with new sound
+  if (isHolding) {
+    playSound(id);
+  }
 }
 
 // ─── SOLO BUTTON ───────────────────────────────────────────
 const vuvuBtn = document.getElementById('vuvu-btn');
 const vuvuWrap = document.getElementById('vuvu-wrap');
+const pitchSlider = document.getElementById('pitch-slider');
+const holdBtn = document.getElementById('hold-btn');
 
 function startPress() {
   ctx.resume();
+  if (isHolding) {
+    // If holding and already playing, stop
+    endPress();
+    return;
+  }
   playSound(selectedSound);
   vuvuWrap.classList.add('playing');
   vuvuBtn.classList.add('pressing');
 }
 
 function endPress() {
+  if (isHolding) return; // Don't stop if hold mode is on
   stopSound();
   vuvuWrap.classList.remove('playing');
   vuvuBtn.classList.remove('pressing');
 }
 
+function toggleHold() {
+  isHolding = !isHolding;
+  holdBtn.textContent = isHolding ? '🔒 Maintien ON' : '🔒 Maintien OFF';
+  holdBtn.classList.toggle('active', isHolding);
+  if (!isHolding) {
+    stopSound();
+    vuvuWrap.classList.remove('playing');
+    vuvuBtn.classList.remove('pressing');
+  }
+}
+
+pitchSlider.addEventListener('input', () => {
+  if (selectedSound === 'Twonpet') {
+    updatePitch();
+  }
+});
+
+holdBtn.addEventListener('click', toggleHold);
+
 vuvuBtn.addEventListener('mousedown', startPress);
 vuvuBtn.addEventListener('touchstart', (e) => { e.preventDefault(); startPress(); }, { passive: false });
-vuvuBtn.addEventListener('mouseup', endPress);
+document.addEventListener('mouseup', endPress);
 vuvuBtn.addEventListener('mouseleave', endPress);
-vuvuBtn.addEventListener('touchend', endPress);
-vuvuBtn.addEventListener('touchcancel', endPress);
+document.addEventListener('touchend', endPress);
+document.addEventListener('touchcancel', endPress);
 
 // ─── TABS ───────────────────────────────────────────────────
 function switchTab(tab) {
