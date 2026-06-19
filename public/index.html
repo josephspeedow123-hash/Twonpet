@@ -551,6 +551,7 @@
     <button class="sound-btn" onclick="selectSound('klaxon', this)">📯 Klaxon</button>
     <button class="sound-btn" onclick="selectSound('drums', this)">🥁 Tambou</button>
     <button class="sound-btn" onclick="selectSound('chant', this)">🇭🇹 Chant Haïti</button>
+    <button class="sound-btn" onclick="selectSound('rara', this)">🪈 Rara</button>
   </div>
 
 </div>
@@ -597,6 +598,7 @@
         <button class="dj-btn" onclick="djPlay('klaxon', this)">📯 Klaxon</button>
         <button class="dj-btn" onclick="djPlay('drums', this)">🥁 Tambou</button>
         <button class="dj-btn" onclick="djPlay('chant', this)">🇭🇹 Chant Haïti</button>
+        <button class="dj-btn" onclick="djPlay('rara', this)">🪈 Rara</button>
       </div>
       <button class="stop-btn" onclick="djStop()">⏹ Arrêter le son</button>
     </div>
@@ -640,7 +642,11 @@ const sounds = {
   klaxon:   () => generateKlaxon(),
   drums:    () => generateDrums(),
   chant:    () => generateChant(),
+  rara:     () => generateRara(),
 };
+
+let raraTimers = [];
+let raraActive = false;
 
 let selectedSound = 'Twonpet';
 
@@ -784,6 +790,75 @@ function generateChant() {
   return { nodes: [osc, lfo, lfoGain], output };
 }
 
+function generateRara() {
+  const output = ctx.createGain();
+  output.gain.setValueAtTime(1, ctx.currentTime);
+
+  raraActive = true;
+  raraTimers = [];
+
+  function makeDistortion() {
+    const curve = new Float32Array(256);
+    for (let i = 0; i < 256; i++) {
+      const x = (i * 2) / 256 - 1;
+      curve[i] = (Math.PI + 200) * x / (Math.PI + 200 * Math.abs(x));
+    }
+    const ws = ctx.createWaveShaper();
+    ws.curve = curve;
+    return ws;
+  }
+
+  function playHit(freq, delaySec) {
+    if (!raraActive) return;
+    const t = ctx.currentTime + delaySec;
+    if (!isFinite(t)) return;
+
+    const osc = ctx.createOscillator();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(freq, t);
+    osc.frequency.linearRampToValueAtTime(freq * 0.97, t + 0.02);
+
+    const hitGain = ctx.createGain();
+    hitGain.gain.setValueAtTime(0, t);
+    hitGain.gain.linearRampToValueAtTime(0.4, t + 0.02);
+    hitGain.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
+
+    const dist = makeDistortion();
+    osc.connect(dist);
+    dist.connect(hitGain);
+    hitGain.connect(output);
+
+    osc.start(t);
+    osc.stop(t + 0.18);
+
+    const cleanupId = setTimeout(() => {
+      try { osc.disconnect(); } catch(e) {}
+      try { dist.disconnect(); } catch(e) {}
+      try { hitGain.disconnect(); } catch(e) {}
+    }, (delaySec + 0.2) * 1000);
+    raraTimers.push(cleanupId);
+  }
+
+  function scheduleVoice(freq, interval, offset) {
+    const startId = setTimeout(() => {
+      if (!raraActive) return;
+      playHit(freq, 0);
+      const ivId = setInterval(() => {
+        if (!raraActive) { clearInterval(ivId); return; }
+        playHit(freq, 0);
+      }, interval);
+      raraTimers.push(ivId);
+    }, offset);
+    raraTimers.push(startId);
+  }
+
+  scheduleVoice(165, 600, 0);
+  scheduleVoice(220, 450, 150);
+  scheduleVoice(330, 800, 300);
+
+  return { nodes: [], output };
+}
+
 // ─── PLAY / STOP / PITCH ───────────────────────────────────
 
 function playSound(soundId, volume) {
@@ -809,6 +884,10 @@ function playSound(soundId, volume) {
 }
 
 function stopSound() {
+  raraActive = false;
+  for (const id of raraTimers) { clearTimeout(id); clearInterval(id); }
+  raraTimers = [];
+
   if (faderGain) {
     try { faderGain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.04); } catch(e) {}
   }
